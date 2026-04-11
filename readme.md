@@ -18,13 +18,10 @@ mkdir src
 ```
 ```
 cd ~/bwi_ros2
-git clone https://github.com/utexas-bwi/serial_for_ros2.git
+git clone https://github.com/UT-Austin-FRI-Autonomous-Robots/serial.git
 ```
 ```
-cd ~/bwi_ros2/serial_for_ros2/
-mv serial ..
-cd ..
-cd serial
+cd ~/bwi_ros2/serial/
 rm -rf build
 mkdir build
 cd build
@@ -36,6 +33,9 @@ cd ~/bwi_ros2/src
 git clone --branch humble https://github.com/microsoft/Azure_Kinect_ROS_Driver.git
 git clone https://github.com/Living-With-Robots-Lab/apriltag_ros.git
 git clone https://github.com/utexas-bwi/bwi_ros2_common.git
+git clone https://github.com/Living-With-Robots-Lab/segbot_description.git
+git clone --recurse-submodules https://github.com/utexas-bwi/urg_node2.git
+git clone https://github.com/Living-With-Robots-Lab/lidar.git
 ```
 
 # On a V2
