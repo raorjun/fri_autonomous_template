@@ -68,53 +68,34 @@ void FollowerRobotNode::aprilTagCallback(const apriltag_msgs::msg::AprilTagDetec
 }
 
 /*
-You are responsible for implementing this.
-Note that you should use Eigen for your matrix computations.
-When the robot is done moving, it should be follow_distance away from the
-    target, and facing the target. 
-That is not to say "facing the same direction as the target."
-The robot should be pointing to the x,y position of the target, from
-the position it ends in.
-
+    You are responsible for implementing this.
+    Note that you should use Eigen for your matrix computations.
 */
 Eigen::MatrixXd FollowerRobotNode::computeGoToFrameFromBaseLink(
     geometry_msgs::msg::TransformStamped &base_link_to_tag1) {
-    /*
-        How do you implement this?
+    double tx = base_link_to_tag1.transform.translation.x;
+    double ty = base_link_to_tag1.transform.translation.y;
 
-        You can find how to make a 4x4 Rigid Transformation in the class notes.
-        The class should return a 4x4 Rigid Transformation.
+    double angle_to_tag = atan2(ty, tx);
+    double current_dist = sqrt(tx*tx + ty*ty);
+    if (current_dist < 1e-6) {
+        return Eigen::MatrixXd::Identity(4, 4);
+    }
+    double ratio = (current_dist - follow_distance_) / current_dist;
+    
+    double goal_x = tx * ratio;
+    double goal_y = ty * ratio;
 
-        Think of the position of the tag as an x, y problem in 2D.
-        You cannot tilt the robot up and down to deal with Z.
-
-        So.. 
-        You can get x, and y from the tag's translation. 
-        You can find the angle that it should rotate about the z axis using
-            atan2
-        You can compute the rotation matrix to face in that direction using
-            Eigen::AngleAxisd
-        You can turn an Eigen::AngleAxisd into a rotation matrix using
-            .toRotationMatrix.
-
-        You can create a 4x4 Eigen matrix using the
-            Eigen::MatrixXd::Identity function. 
-        You can write the upper left-hand 3x3 using the block command.
-
-        You can figure out which direction the robot should be pointing in
-            by considering x and y of the tag, since the tag is expressed
-            relative to the camera (and thus relative to the base.. 
-            for this exercise, you can pretend that they're in the same place
-            the solution works out the same). 
-
-        Okay, so the robot should go to a spot that is follow_distance closer
-            than x,y of the tag.
-
-        Stuff the translational components into your 4x4 rigid transform.
-
-        That's a lot of help! Go write this thing!!
-    */
     Eigen::MatrixXd transform = Eigen::MatrixXd::Identity(4, 4);
+    
+    // Set Rotation (Z-axis rotation to face tag)
+    Eigen::AngleAxisd rotation_vector(angle_to_tag, Eigen::Vector3d::UnitZ());
+    transform.block<3, 3>(0, 0) = rotation_vector.toRotationMatrix();
+
+    // Set Translation
+    transform(0, 3) = goal_x;
+    transform(1, 3) = goal_y;
+    transform(2, 3) = 0.0; // Keep it on the ground plane
 
     return transform;
 }
@@ -122,16 +103,14 @@ Eigen::MatrixXd FollowerRobotNode::computeGoToFrameFromBaseLink(
 //You implement this as part of the homework.
 double FollowerRobotNode::computeDistanceBaseLinkTag1(
     geometry_msgs::msg::TransformStamped &base_link_to_tag1) {
-    /*
-        The camera is at the origin and the tag's translaton is relative to
-        the position of the camera.
+    double x = base_link_to_tag1.transform.translation.x;
+    double y = base_link_to_tag1.transform.translation.y;
+    double z = base_link_to_tag1.transform.translation.z;
 
-        Distance is just l2 norm or Euclidean distance. You've got this.
-    */
-    double distance = 0.0;
-    RCLCPP_INFO_STREAM(this->get_logger(),
-        "distance:  " << distance << endl);
-    return distance;  
+    double distance = sqrt(x*x + y*y + z*z);
+    
+    RCLCPP_INFO_STREAM(this->get_logger(), "distance: " << distance);
+    return distance; 
 }
 
 //I implemented this. You do not need to change it.
@@ -190,36 +169,33 @@ bool FollowerRobotNode::theTagMoved(
             tf_broadcaster_.sendTransform.
 */
 void FollowerRobotNode::computeAndAct() {
-    try{
-        //Look up the transform between map and base_link here
-        geometry_msgs::msg::TransformStamped map_to_base_link;
-        geometry_msgs::msg::TransformStamped base_link_to_tag1;
+    try {
+        // Look up transforms
+        geometry_msgs::msg::TransformStamped map_to_base_link = 
+            tf_buffer_.lookupTransform("map", "base_link", tf2::TimePointZero);
+        geometry_msgs::msg::TransformStamped base_link_to_tag1 = 
+            tf_buffer_.lookupTransform("base_link", "tag1", tf2::TimePointZero);
+
         if(theTagMoved(map_to_base_link, base_link_to_tag1)) {
-            RCLCPP_INFO_STREAM(this->get_logger(), "THE TAG MOVED" << endl);
             double distance = computeDistanceBaseLinkTag1(base_link_to_tag1);
+            
             if(distance > follow_distance_) {
-                Eigen::MatrixXd m_map_to_base_link =
-                    transformToMatrix(map_to_base_link);
-                Eigen::MatrixXd m_go_to =
-                    computeGoToFrameFromBaseLink(base_link_to_tag1);
-                /*
-                    Compute m_map_to_go_to_ here. This updates the go to for
-                        the entire class, assuring that you always broadcast
-                        the correct pose.
-                */
-                //m_map_to_go_to_ =
+                Eigen::MatrixXd m_map_to_base_link = transformToMatrix(map_to_base_link);
+                Eigen::MatrixXd m_go_to = computeGoToFrameFromBaseLink(base_link_to_tag1);
+                
+                // Compose frames: Map -> Base -> Goal
+                m_map_to_go_to_ = m_map_to_base_link * m_go_to;
         
                 move_to_target_.copyToGoalPoseAndSend(m_go_to);
             }
         }
-        /*
-            Fill in the TransformStamped using matrixToTransform.
-            Set tf1.header.stamp.
-            Send using tf_broadcaster_.
-        */
-        geometry_msgs::msg::TransformStamped tf1;
+
+        // Broadcast the goal pose to TF so you can see it in RViz
+        geometry_msgs::msg::TransformStamped tf1 = matrixToTransform(m_map_to_go_to_, "map", "go_to_pose");
+        tf1.header.stamp = this->get_clock()->now();
+        tf_broadcaster_.sendTransform(tf1);
 
     } catch (const tf2::TransformException &ex) {
-        RCLCPP_WARN(this->get_logger(), "Could not transform world -> example_frame: %s", ex.what());
+        RCLCPP_WARN(this->get_logger(), "TF Lookup failed: %s", ex.what());
     }
 }
