@@ -1,7 +1,7 @@
 search:
   # Main target label for the search logic and YOLO mode.
   target_label: "backpack"
-  camera_topic: "/rgb/image_raw"
+  camera_topic: "/image_raw"
   goal_topic: "/goal_pose"
   navigation_mode: "action"
   strategy: "bayes"
@@ -61,7 +61,7 @@ likelihoods:
 detector:
   enabled: true
   # Used only when detector_type:=color.
-  camera_topic: "/rgb/image_raw"
+  camera_topic: "/image_raw"
   target_mode: "red"
   min_area_px: 1800
   blur_kernel: 5
@@ -76,7 +76,7 @@ detector:
 
 yolo:
   # Used only when detector_type:=yolo.
-  camera_topic: "/rgb/image_raw"
+  camera_topic: "/image_raw"
   model_path: "yolov8n.pt"
   target_label: "backpack"
   confidence_threshold: 0.45

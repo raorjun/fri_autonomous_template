@@ -7,6 +7,7 @@ import cv2
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -50,7 +51,9 @@ class YoloDetectorNode(Node):
             )
 
         self.model = YOLO(self.model_path)
-        self.image_sub = self.create_subscription(Image, self.camera_topic, self.image_callback, 10)
+        self.image_sub = self.create_subscription(
+            Image, self.camera_topic, self.image_callback, qos_profile_sensor_data
+        )
         self.debug_pub = self.create_publisher(Image, "/detector/debug_image", 10)
         self.obs_pub = self.create_publisher(String, "/detector/observation", 10)
         self.get_logger().info(

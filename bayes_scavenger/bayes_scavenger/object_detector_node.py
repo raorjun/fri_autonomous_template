@@ -7,6 +7,7 @@ import rclpy
 from cv_bridge import CvBridge
 from bayes_scavenger.search_config import load_search_config
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -44,7 +45,7 @@ class ObjectDetectorNode(Node):
             self.blur_kernel += 1
 
         self.image_sub = self.create_subscription(
-            Image, self.camera_topic, self.image_callback, 10
+            Image, self.camera_topic, self.image_callback, qos_profile_sensor_data
         )
         self.debug_pub = self.create_publisher(Image, '/detector/debug_image', 10)
         self.obs_pub = self.create_publisher(String, '/detector/observation', 10)
