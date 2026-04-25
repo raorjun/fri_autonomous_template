@@ -57,3 +57,29 @@ colcon build
 source install/setup.bash
 ```
 There will be warnings after you build for the first time, but hopefully no errors. Remember to run colcon build in your workspace root everytime you make a change.
+
+## Bayesian search package
+
+This repo now also includes a ROS 2 Python package named `bayes_scavenger`.
+
+It adds:
+
+- Bayesian zone belief updates
+- a search node for choosing the next room or waypoint
+- YOLO and color-detector support
+- RViz markers for beliefs and current goal pose
+- simulator and evaluation scripts for comparing `bayes`, `random`, and `sequential`
+
+Build it with:
+
+```bash
+cd ~/bwi_ros2
+colcon build --packages-select bayes_scavenger
+source install/setup.bash
+```
+
+Run it with:
+
+```bash
+ros2 launch bayes_scavenger bayes_scavenger.launch.py
+```

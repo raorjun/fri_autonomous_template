@@ -1,0 +1,83 @@
+search:
+  # Main target label for the search logic and YOLO mode.
+  target_label: "backpack"
+  camera_topic: "/image_raw"
+  goal_topic: "/goal_pose"
+  navigation_mode: "action"
+  strategy: "bayes"
+  sequence_order: ["elevator_lab", "tv_desk_room", "last_elevator"]
+  arrival_radius_m: 0.5
+  scan_duration_sec: 4.0
+  revisit_penalty: 0.20
+  observation_confidence_threshold: 0.45
+  auto_advance_sec: 10.0
+  marker_topic: "/bayes/zones"
+  log_history_path: ""
+  random_seed: 7
+  start_pose:
+    x: 0.0
+    y: 0.0
+
+# These are your three search locations.
+# x/y/z now use your RViz map points.
+# yaw_deg is still a placeholder until you capture the facing direction.
+# Keep the zone names in priors / zones / likelihoods matched exactly.
+priors:
+  elevator_lab: 0.34
+  tv_desk_room: 0.33
+  last_elevator: 0.33
+
+zones:
+  elevator_lab:
+    frame_id: "map"
+    x: -5.830899238586426
+    y: -9.030474662780762
+    z: -0.0015163421630859375
+    yaw_deg: 0.0
+  tv_desk_room:
+    frame_id: "map"
+    x: -38.9943542480469
+    y: -12.0370512008667
+    z: -0.007099151611328125
+    yaw_deg: 0.0
+  last_elevator:
+    frame_id: "map"
+    x: -61.92833709716797
+    y: -10.406110763549805
+    z: 0.0035858154296875
+    yaw_deg: 0.0
+
+likelihoods:
+  false_positive_rate: 0.05
+  positive_detection:
+    elevator_lab: 0.80
+    tv_desk_room: 0.80
+    last_elevator: 0.80
+  negative_detection:
+    elevator_lab: 0.25
+    tv_desk_room: 0.25
+    last_elevator: 0.25
+
+detector:
+  enabled: true
+  # Used only when detector_type:=color.
+  target_mode: "red"
+  min_area_px: 1800
+  blur_kernel: 5
+  red_1_lower: [0, 120, 70]
+  red_1_upper: [10, 255, 255]
+  red_2_lower: [170, 120, 70]
+  red_2_upper: [180, 255, 255]
+  blue_lower: [100, 120, 50]
+  blue_upper: [140, 255, 255]
+  green_lower: [40, 60, 50]
+  green_upper: [85, 255, 255]
+
+yolo:
+  # Used only when detector_type:=yolo.
+  camera_topic: "/image_raw"
+  model_path: "yolov8n.pt"
+  target_label: "backpack"
+  confidence_threshold: 0.45
+  image_size: 640
+  device: "cpu"
