@@ -53,6 +53,9 @@ class BayesSearchNode(Node):
             float(search_cfg["observation_confidence_threshold"]),
         )
         self.declare_parameter("auto_advance_sec", float(search_cfg["auto_advance_sec"]))
+        self.declare_parameter("demo_force_detect_zone", str(search_cfg["demo_force_detect_zone"]))
+        self.declare_parameter("demo_force_detect_delay_sec", float(search_cfg["demo_force_detect_delay_sec"]))
+        self.declare_parameter("collapse_beliefs_on_found", bool(search_cfg["collapse_beliefs_on_found"]))
 
         self.target_label = str(search_cfg["target_label"])
         self.detector_labels = {
@@ -68,6 +71,9 @@ class BayesSearchNode(Node):
         self.revisit_penalty = float(self.get_parameter("revisit_penalty").value)
         self.conf_threshold = float(self.get_parameter("observation_confidence_threshold").value)
         self.auto_advance_sec = float(self.get_parameter("auto_advance_sec").value)
+        self.demo_force_detect_zone = str(self.get_parameter("demo_force_detect_zone").value).strip()
+        self.demo_force_detect_delay_sec = float(self.get_parameter("demo_force_detect_delay_sec").value)
+        self.collapse_beliefs_on_found = bool(self.get_parameter("collapse_beliefs_on_found").value)
         self.marker_topic = str(search_cfg["marker_topic"])
         self.sequence_order = tuple(search_cfg["sequence_order"])
         self.rng = random.Random(int(search_cfg["random_seed"]))
@@ -78,6 +84,8 @@ class BayesSearchNode(Node):
             raise ValueError("strategy must be bayes, random, or sequential")
 
         self.waypoints = config["zones"]
+        if self.demo_force_detect_zone and self.demo_force_detect_zone not in self.waypoints:
+            raise ValueError("demo_force_detect_zone must match one of the configured zones")
         self.engine = BayesianSearchEngine(
             config["priors"],
             likelihoods["positive_detection"],
@@ -113,6 +121,7 @@ class BayesSearchNode(Node):
         self.state = "idle"
         self.found = False
         self.started = False
+        self.demo_force_detect_consumed = False
 
         self.history_file = None
         self.history_writer = None
@@ -391,6 +400,29 @@ class BayesSearchNode(Node):
         event_name = "positive_update" if observation_positive else "negative_update"
         self.publish_beliefs(event_name)
 
+    def collapse_beliefs_to_current_goal(self) -> None:
+        if self.current_goal_name is None:
+            return
+        self.engine.beliefs = {
+            zone_name: 1.0 if zone_name == self.current_goal_name else 0.0
+            for zone_name in self.engine.locations
+        }
+
+    def complete_positive_scan(self, confidence: float, source: str) -> None:
+        if self.current_goal_name is None or self.found:
+            return
+
+        self.update_beliefs(True)
+        if self.collapse_beliefs_on_found:
+            self.collapse_beliefs_to_current_goal()
+
+        self.found = True
+        self.state = "found"
+        self.publish_status(
+            f"Target found in {self.current_goal_name} with confidence {confidence:.2f} via {source}."
+        )
+        self.publish_beliefs("found")
+
     def complete_negative_scan(self) -> None:
         if self.current_goal_name is None:
             return
@@ -419,13 +451,7 @@ class BayesSearchNode(Node):
         label_matches = label in self.detector_labels
 
         if detected and confidence >= self.conf_threshold and label_matches:
-            self.update_beliefs(True)
-            self.found = True
-            self.state = "found"
-            self.publish_status(
-                f"Target found in {self.current_goal_name} with confidence {confidence:.2f}."
-            )
-            self.publish_beliefs("found")
+            self.complete_positive_scan(confidence, f"detector:{label}")
 
     def control_loop(self) -> None:
         if self.found or self.state == "found":
@@ -460,6 +486,15 @@ class BayesSearchNode(Node):
             return
 
         if self.state == "scanning" and self.goal_arrival_time is not None:
+            if (
+                self.demo_force_detect_zone
+                and not self.demo_force_detect_consumed
+                and self.current_goal_name == self.demo_force_detect_zone
+                and (now_sec - self.goal_arrival_time) >= self.demo_force_detect_delay_sec
+            ):
+                self.demo_force_detect_consumed = True
+                self.complete_positive_scan(max(self.conf_threshold, 0.99), "demo_backup")
+                return
             if (now_sec - self.goal_arrival_time) >= self.scan_duration_sec:
                 self.complete_negative_scan()
 

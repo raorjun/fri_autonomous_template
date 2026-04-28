@@ -80,6 +80,9 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
     search_cfg.setdefault("revisit_penalty", 0.15)
     search_cfg.setdefault("observation_confidence_threshold", 0.18)
     search_cfg.setdefault("auto_advance_sec", 8.0)
+    search_cfg.setdefault("demo_force_detect_zone", "")
+    search_cfg.setdefault("demo_force_detect_delay_sec", 1.0)
+    search_cfg.setdefault("collapse_beliefs_on_found", False)
     search_cfg.setdefault("log_history_path", "")
     search_cfg.setdefault("marker_topic", "/bayes/zones")
     search_cfg.setdefault("random_seed", 7)
@@ -120,10 +123,19 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
         raise ValueError("search.strategy must be one of: bayes, random, sequential")
     search_cfg["strategy"] = strategy
 
+    search_cfg["demo_force_detect_zone"] = str(search_cfg["demo_force_detect_zone"]).strip()
+    search_cfg["demo_force_detect_delay_sec"] = float(search_cfg["demo_force_detect_delay_sec"])
+    if search_cfg["demo_force_detect_delay_sec"] < 0.0:
+        raise ValueError("search.demo_force_detect_delay_sec must be non-negative")
+    search_cfg["collapse_beliefs_on_found"] = bool(search_cfg["collapse_beliefs_on_found"])
+
     sequence_order = _to_string_list(search_cfg["sequence_order"], "search.sequence_order")
     if set(sequence_order) != location_keys:
         raise ValueError("search.sequence_order must contain exactly the configured locations")
     search_cfg["sequence_order"] = sequence_order
+
+    if search_cfg["demo_force_detect_zone"] and search_cfg["demo_force_detect_zone"] not in location_keys:
+        raise ValueError("search.demo_force_detect_zone must be one of the configured locations")
 
     start_pose = _require_mapping(search_cfg["start_pose"], "search.start_pose")
     start_pose.setdefault("x", 0.0)

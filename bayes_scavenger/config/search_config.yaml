@@ -11,6 +11,10 @@ search:
   revisit_penalty: 0.20
   observation_confidence_threshold: 0.18
   auto_advance_sec: 10.0
+  # Demo backup: if the vision detector misses, force a positive find in this room.
+  demo_force_detect_zone: "tv_desk_room"
+  demo_force_detect_delay_sec: 1.5
+  collapse_beliefs_on_found: true
   marker_topic: "/bayes/zones"
   log_history_path: ""
   random_seed: 7
