@@ -1,0 +1,78 @@
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.34, "t...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.119...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.119382...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.034...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.034446...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.053...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.053465...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.062...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.062555...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.176...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.176715...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.34,...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.34, "t...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.449...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.449235...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.490...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.490724...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.756...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.756067...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.881...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.881499...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.661...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.661885...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.34,...'
+---
+data: '{"event": "arrived", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.34, "t...'
+---
+data: '{"event": "negative_update", "state": "scanning", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": ...'
+---
+data: '{"event": "goal_sent", "state": "traveling", "strategy": "bayes", "navigation_mode": "action", "beliefs": {"elevator_lab": 0.119...'
+---
