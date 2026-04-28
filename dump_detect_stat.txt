@@ -1,0 +1,20 @@
+data: Arrived at elevator_lab, scanning now.
+---
+data: No target confirmed in elevator_lab. Selecting next zone.
+---
+data: Sending robot to zone elevator_lab.
+---
+data: Nav2 accepted goal for elevator_lab.
+---
+data: Arrived at elevator_lab, scanning now.
+---
+data: No target confirmed in elevator_lab. Selecting next zone.
+---
+data: Sending robot to zone tv_desk_room.
+---
+data: Nav2 accepted goal for tv_desk_room.
+---
+data: Arrived at tv_desk_room, scanning now.
+---
+data: Target found in tv_desk_room with confidence 0.99 via demo_backup.
+---
