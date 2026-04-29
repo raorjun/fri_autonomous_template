@@ -1,7 +1,7 @@
 import json
 import math
 import random
-from typing import Optional, Tuple
+from typing import Optional
 
 import rclpy
 from action_msgs.msg import GoalStatus
@@ -101,7 +101,7 @@ class BayesSearchNode(Node):
         if self.navigation_mode == "action":
             self.nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
-        self.current_pose: Optional[Tuple[float, float]] = None
+        self.current_pose: Optional[tuple] = None
         self.current_goal_name: Optional[str] = None
         self.current_goal_pose: Optional[PoseStamped] = None
         self.goal_sent_time: Optional[float] = None
@@ -320,31 +320,15 @@ class BayesSearchNode(Node):
         self.publish_status(f"Arrived at {self.current_goal_name}, scanning now.")
         self.publish_beliefs("arrived")
 
-    def update_beliefs(self, observation_positive: bool) -> None:
-        if self.current_goal_name is None:
-            return
-        self.engine.update(self.current_goal_name, observation_positive)
-        event_name = "positive_update" if observation_positive else "negative_update"
-        self.publish_beliefs(event_name)
-
-    def collapse_beliefs_to_current_goal(self) -> None:
-        if self.current_goal_name is None:
-            return
-        self.engine.beliefs = {
-            zone_name: 1.0 if zone_name == self.current_goal_name else 0.0
-            for zone_name in self.engine.locations
-        }
-
     def complete_positive_scan(self, confidence: float, source: str) -> None:
         if self.current_goal_name is None or self.found:
             return
-
-        self.update_beliefs(True)
+        self.engine.update(self.current_goal_name, True)
         if self.collapse_beliefs_on_found:
-            self.collapse_beliefs_to_current_goal()
-
+            self.engine.beliefs = {z: (1.0 if z == self.current_goal_name else 0.0) for z in self.engine.locations}
         self.found = True
         self.state = "found"
+        self.publish_beliefs("positive_update")
         self.publish_status(
             f"Target found in {self.current_goal_name} with confidence {confidence:.2f} via {source}."
         )
@@ -354,7 +338,8 @@ class BayesSearchNode(Node):
         if self.current_goal_name is None:
             return
         scanned_zone = self.current_goal_name
-        self.update_beliefs(False)
+        self.engine.update(self.current_goal_name, False)
+        self.publish_beliefs("negative_update")
         self.publish_status(f"No target confirmed in {scanned_zone}. Selecting next zone.")
         self.current_goal_name = None
         self.current_goal_pose = None

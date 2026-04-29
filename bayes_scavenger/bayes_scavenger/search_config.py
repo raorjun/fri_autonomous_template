@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any, Dict, Mapping
 
@@ -22,21 +20,6 @@ def _to_probability_map(values: Mapping[str, Any], name: str) -> Dict[str, float
     return converted
 
 
-def _to_non_negative_map(values: Mapping[str, Any], name: str) -> Dict[str, float]:
-    converted: Dict[str, float] = {}
-    for key, value in values.items():
-        numeric = float(value)
-        if numeric < 0.0:
-            raise ValueError(f"{name}[{key!r}] must be non-negative")
-        converted[str(key)] = numeric
-    return converted
-
-
-def _to_string_list(values: Any, name: str) -> list[str]:
-    if not isinstance(values, list):
-        raise ValueError(f"{name} must be a list")
-    return [str(value) for value in values]
-
 
 def load_search_config(config_path: str) -> Dict[str, Any]:
     path = Path(config_path)
@@ -47,7 +30,7 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
     search_cfg = _require_mapping(config.get("search", {}), "search")
     detector_cfg = _require_mapping(config.get("detector", {}), "detector")
     yolo_cfg = _require_mapping(config.get("yolo", {}), "yolo")
-    priors = _to_non_negative_map(_require_mapping(config.get("priors", {}), "priors"), "priors")
+    priors = {str(k): float(v) for k, v in _require_mapping(config.get("priors", {}), "priors").items()}
     zones_raw = config.get("zones", config.get("waypoints", {}))
     waypoints = _require_mapping(zones_raw, "zones")
     likelihoods = _require_mapping(config.get("likelihoods", {}), "likelihoods")
@@ -127,7 +110,7 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
         raise ValueError("search.demo_force_detect_delay_sec must be non-negative")
     search_cfg["collapse_beliefs_on_found"] = bool(search_cfg["collapse_beliefs_on_found"])
 
-    sequence_order = _to_string_list(search_cfg["sequence_order"], "search.sequence_order")
+    sequence_order = [str(v) for v in search_cfg["sequence_order"]]
     if set(sequence_order) != location_keys:
         raise ValueError("search.sequence_order must contain exactly the configured locations")
     search_cfg["sequence_order"] = sequence_order
