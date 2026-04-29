@@ -5,7 +5,6 @@ from typing import Dict, Mapping, Optional, Tuple
 
 
 class BayesianSearchEngine:
-    """Reusable Bayesian belief tracker for waypoint-based object search."""
 
     def __init__(
         self,
@@ -61,10 +60,6 @@ class BayesianSearchEngine:
             uniform = 1.0 / max(len(values), 1)
             return {key: uniform for key in values}
         return {key: max(float(value), 0.0) / total for key, value in values.items()}
-
-    def reset(self) -> None:
-        self.beliefs = dict(self.priors)
-        self.visited_counts = {location: 0 for location in self.locations}
 
     def update(self, scan_location: str, detected: bool) -> Dict[str, float]:
         if scan_location not in self.beliefs:

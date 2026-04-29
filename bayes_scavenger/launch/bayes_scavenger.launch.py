@@ -6,7 +6,9 @@ from launch.substitutions import PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-
+"""
+Launch file for the scavenger hunt proj
+"""
 def generate_launch_description():
     package_share = FindPackageShare('bayes_scavenger')
     default_config = PathJoinSubstitution([package_share, 'config', 'search_config.yaml'])

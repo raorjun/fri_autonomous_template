@@ -83,11 +83,9 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
     search_cfg.setdefault("demo_force_detect_zone", "")
     search_cfg.setdefault("demo_force_detect_delay_sec", 1.0)
     search_cfg.setdefault("collapse_beliefs_on_found", False)
-    search_cfg.setdefault("log_history_path", "")
     search_cfg.setdefault("marker_topic", "/bayes/zones")
     search_cfg.setdefault("random_seed", 7)
     search_cfg.setdefault("sequence_order", list(location_keys))
-    search_cfg.setdefault("start_pose", {"x": 0.0, "y": 0.0})
 
     detector_cfg.setdefault("camera_topic", search_cfg["camera_topic"])
     detector_cfg.setdefault("target_mode", search_cfg["target_label"])
@@ -136,11 +134,6 @@ def load_search_config(config_path: str) -> Dict[str, Any]:
 
     if search_cfg["demo_force_detect_zone"] and search_cfg["demo_force_detect_zone"] not in location_keys:
         raise ValueError("search.demo_force_detect_zone must be one of the configured locations")
-
-    start_pose = _require_mapping(search_cfg["start_pose"], "search.start_pose")
-    start_pose.setdefault("x", 0.0)
-    start_pose.setdefault("y", 0.0)
-    search_cfg["start_pose"] = {"x": float(start_pose["x"]), "y": float(start_pose["y"])}
 
     return {
         "search": search_cfg,

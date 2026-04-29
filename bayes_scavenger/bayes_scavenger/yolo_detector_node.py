@@ -15,7 +15,7 @@ from bayes_scavenger.search_config import load_search_config
 
 try:
     from ultralytics import YOLO
-except ImportError:  # pragma: no cover - optional dependency for robot deployment
+except ImportError: 
     YOLO = None
 
 

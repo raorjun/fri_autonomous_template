@@ -1,8 +1,6 @@
-import csv
 import json
 import math
 import random
-from pathlib import Path
 from typing import Optional, Tuple
 
 import rclpy
@@ -78,11 +76,6 @@ class BayesSearchNode(Node):
         self.sequence_order = tuple(search_cfg["sequence_order"])
         self.rng = random.Random(int(search_cfg["random_seed"]))
 
-        if self.navigation_mode not in {"action", "topic"}:
-            raise ValueError("navigation_mode must be either 'action' or 'topic'")
-        if self.search_strategy not in {"bayes", "random", "sequential"}:
-            raise ValueError("strategy must be bayes, random, or sequential")
-
         self.waypoints = config["zones"]
         if self.demo_force_detect_zone and self.demo_force_detect_zone not in self.waypoints:
             raise ValueError("demo_force_detect_zone must match one of the configured zones")
@@ -95,7 +88,6 @@ class BayesSearchNode(Node):
         )
 
         self.goal_pub = self.create_publisher(PoseStamped, self.goal_topic, 10)
-        self.debug_goal_pub = self.create_publisher(PoseStamped, "/bayes/current_goal_pose", 10)
         self.belief_pub = self.create_publisher(String, "/bayes/beliefs", 10)
         self.status_pub = self.create_publisher(String, "/bayes/status", 10)
         self.marker_pub = self.create_publisher(MarkerArray, self.marker_topic, 10)
@@ -123,10 +115,6 @@ class BayesSearchNode(Node):
         self.started = False
         self.demo_force_detect_consumed = False
 
-        self.history_file = None
-        self.history_writer = None
-        self._open_history_log(str(search_cfg["log_history_path"]))
-
         self.timer = self.create_timer(0.5, self.control_loop)
         self.publish_status(
             f"Bayes search node ready in {self.navigation_mode} navigation mode using {self.search_strategy} search."
@@ -135,33 +123,6 @@ class BayesSearchNode(Node):
 
     def _now_sec(self) -> float:
         return self.get_clock().now().nanoseconds / 1e9
-
-    def _open_history_log(self, path: str) -> None:
-        if not path:
-            return
-        output_path = Path(path).expanduser()
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        self.history_file = output_path.open("w", newline="", encoding="utf-8")
-        self.history_writer = csv.writer(self.history_file)
-        self.history_writer.writerow(
-            [
-                "timestamp_sec",
-                "event",
-                "state",
-                "strategy",
-                "navigation_mode",
-                "current_goal",
-                "zone",
-                "belief",
-                "visited_count",
-                "found",
-            ]
-        )
-
-    def destroy_node(self):
-        if self.history_file is not None and not self.history_file.closed:
-            self.history_file.close()
-        return super().destroy_node()
 
     def pose_callback(self, msg: PoseWithCovarianceStamped) -> None:
         self.current_pose = (
@@ -179,27 +140,6 @@ class BayesSearchNode(Node):
         msg.data = text
         self.status_pub.publish(msg)
         self.get_logger().info(text)
-
-    def _write_history_rows(self, event: str) -> None:
-        if self.history_writer is None or self.history_file is None:
-            return
-        timestamp_sec = self._now_sec()
-        for zone in self.waypoints:
-            self.history_writer.writerow(
-                [
-                    f"{timestamp_sec:.6f}",
-                    event,
-                    self.state,
-                    self.search_strategy,
-                    self.navigation_mode,
-                    self.current_goal_name or "",
-                    zone,
-                    f"{self.engine.beliefs[zone]:.6f}",
-                    self.engine.visited_counts[zone],
-                    self.found,
-                ]
-            )
-        self.history_file.flush()
 
     def publish_zone_markers(self) -> None:
         marker_array = MarkerArray()
@@ -272,7 +212,6 @@ class BayesSearchNode(Node):
         )
         self.belief_pub.publish(msg)
         self.publish_zone_markers()
-        self._write_history_rows(event)
 
     def make_goal(self, zone_name: str) -> PoseStamped:
         zone = self.waypoints[zone_name]
@@ -285,16 +224,6 @@ class BayesSearchNode(Node):
         msg.pose.position.z = float(zone.get("z", 0.0))
         msg.pose.orientation = yaw_to_quaternion(yaw_rad)
         return msg
-
-    def choose_next_zone(self) -> str:
-        return choose_next_location(
-            self.search_strategy,
-            self.engine,
-            rng=self.rng,
-            sequence_order=self.sequence_order,
-            current_pose=self.current_pose,
-            waypoints=self.waypoints,
-        )
 
     def distance_to_current_goal(self) -> Optional[float]:
         if self.current_pose is None or self.current_goal_pose is None:
@@ -320,7 +249,7 @@ class BayesSearchNode(Node):
         self.goal_request_future = None
         try:
             goal_handle = future.result()
-        except Exception as exc:  # pragma: no cover - defensive runtime path
+        except Exception as exc:
             self.publish_status(f"Nav2 goal request failed: {exc}")
             self.state = "idle"
             self.current_goal_name = None
@@ -345,7 +274,7 @@ class BayesSearchNode(Node):
 
         try:
             wrapped_result = future.result()
-        except Exception as exc:  # pragma: no cover - defensive runtime path
+        except Exception as exc:
             self.publish_status(f"Nav2 result retrieval failed: {exc}")
             self.state = "idle"
             self.current_goal_name = None
@@ -374,7 +303,6 @@ class BayesSearchNode(Node):
         self.started = True
         self.state = "traveling"
 
-        self.debug_goal_pub.publish(self.current_goal_pose)
         if self.navigation_mode == "topic":
             self.goal_pub.publish(self.current_goal_pose)
         else:
@@ -395,7 +323,6 @@ class BayesSearchNode(Node):
     def update_beliefs(self, observation_positive: bool) -> None:
         if self.current_goal_name is None:
             return
-
         self.engine.update(self.current_goal_name, observation_positive)
         event_name = "positive_update" if observation_positive else "negative_update"
         self.publish_beliefs(event_name)
@@ -432,7 +359,14 @@ class BayesSearchNode(Node):
         self.current_goal_name = None
         self.current_goal_pose = None
         self.state = "idle"
-        next_zone = self.choose_next_zone()
+        next_zone = choose_next_location(
+            self.search_strategy,
+            self.engine,
+            rng=self.rng,
+            sequence_order=self.sequence_order,
+            current_pose=self.current_pose,
+            waypoints=self.waypoints,
+        )
         self.send_goal(next_zone)
 
     def observation_callback(self, msg: String) -> None:
@@ -448,9 +382,8 @@ class BayesSearchNode(Node):
         detected = bool(data.get("detected", False))
         confidence = float(data.get("confidence", 0.0))
         label = str(data.get("label", ""))
-        label_matches = label in self.detector_labels
 
-        if detected and confidence >= self.conf_threshold and label_matches:
+        if detected and confidence >= self.conf_threshold and label in self.detector_labels:
             self.complete_positive_scan(confidence, f"detector:{label}")
 
     def control_loop(self) -> None:
@@ -460,7 +393,14 @@ class BayesSearchNode(Node):
         now_sec = self._now_sec()
 
         if not self.started and self.state == "idle":
-            self.send_goal(self.choose_next_zone())
+            self.send_goal(choose_next_location(
+                self.search_strategy,
+                self.engine,
+                rng=self.rng,
+                sequence_order=self.sequence_order,
+                current_pose=self.current_pose,
+                waypoints=self.waypoints,
+            ))
             return
 
         if self.state == "traveling":
